@@ -1,0 +1,424 @@
+(*PROGRAM MADE TO TEST SEND INFORMATION FROM DE CLP'*)
+(*1 VARIABLE'*)
+(*IT WAS MADE USING A SERIAL SENDER AS BASE AND'*)
+(* THE LIGHT BLINKS EVERYTIME SOMETHING IS SENT'*)
+
+
+(*--------------FUNCTION BLOCK-----------------'*)
+FUNCTION_BLOCK FB_StringToWords_Static
+
+VAR_INPUT
+    TextValue : STRING(20);
+END_VAR
+
+VAR_OUTPUT
+	Word0 : WORD;
+	Word1 : WORD;
+	Word2 : WORD;
+	Word3 : WORD;
+	Word4 : WORD;
+	Word5 : WORD;
+	Word6 : WORD;
+	Word7 : WORD;
+	Word8 : WORD;
+	Word9 : WORD;
+	WordArray : ARRAY[0..9] OF WORD;
+
+END_VAR
+
+VAR
+
+    pByte0 : POINTER TO BYTE;
+    pByte1 : POINTER TO BYTE;
+    pByte2 : POINTER TO BYTE;
+    pByte3 : POINTER TO BYTE;
+    pByte4 : POINTER TO BYTE;
+    pByte5 : POINTER TO BYTE;
+    pByte6 : POINTER TO BYTE;
+    pByte7 : POINTER TO BYTE;
+    pByte8 : POINTER TO BYTE;
+    pByte9 : POINTER TO BYTE;
+    pByte10 : POINTER TO BYTE;
+    pByte11 : POINTER TO BYTE;
+    pByte12 : POINTER TO BYTE;
+    pByte13 : POINTER TO BYTE;
+    pByte14 : POINTER TO BYTE;
+    pByte15 : POINTER TO BYTE;
+    pByte16 : POINTER TO BYTE;
+    pByte17 : POINTER TO BYTE;
+    pByte18 : POINTER TO BYTE;
+    pByte19 : POINTER TO BYTE;
+
+    w0 : WORD;
+    w1 : WORD;
+    w2 : WORD;
+    w3 : WORD;
+    w4 : WORD;
+    w5 : WORD;
+    w6 : WORD;
+    w7 : WORD;
+    w8 : WORD;
+    w9 : WORD;
+    w10 : WORD;
+    w11 : WORD;
+    w12 : WORD;
+    w13 : WORD;
+    w14 : WORD;
+    w15 : WORD;
+    w16 : WORD;
+    w17 : WORD;
+    w18 : WORD;
+    w19 : WORD;
+	i: INT;
+
+END_VAR
+
+
+
+(*-----------CONTINUE------------*)
+
+pByte0 := ADR(TextValue);
+pByte1 := ADR(TextValue) + 1;
+
+pByte2 := ADR(TextValue) + 2;
+pByte3 := ADR(TextValue) + 3;
+
+pByte4 := ADR(TextValue) + 4;
+pByte5 := ADR(TextValue) + 5;
+
+pByte6 := ADR(TextValue) + 6;
+pByte7 := ADR(TextValue) + 7;
+
+pByte8 := ADR(TextValue) + 8;
+pByte9 := ADR(TextValue) + 9;
+
+pByte10 := ADR(TextValue) + 10;
+pByte11 := ADR(TextValue) + 11;
+
+pByte12 := ADR(TextValue) + 12;
+pByte13 := ADR(TextValue) + 13;
+
+pByte14 := ADR(TextValue) + 14;
+pByte15 := ADR(TextValue) + 15;
+
+pByte16 := ADR(TextValue) + 16;
+pByte17 := ADR(TextValue) + 17;
+
+pByte18 := ADR(TextValue) + 18;
+pByte19 := ADR(TextValue) + 19;
+
+
+w0 := pByte0^;
+w1 := pByte1^;
+
+w2 := pByte2^;
+w3 := pByte3^;
+
+w4 := pByte4^;
+w5 := pByte5^;
+
+w6 := pByte6^;
+w7 := pByte7^;
+
+w8 := pByte8^;
+w9 := pByte9^;
+
+w10 := pByte10^;
+w11 := pByte11^;
+
+w12 := pByte12^;
+w13 := pByte13^;
+
+w14 := pByte14^;
+w15 := pByte15^;
+
+w16 := pByte16^;
+w17 := pByte17^;
+
+w18 := pByte18^;
+w19 := pByte19^;
+
+
+Word0 :=
+    SHL(w0,8) OR w1;
+
+Word1 :=
+    SHL(w2,8) OR w3;
+
+Word2 :=
+    SHL(w4,8) OR w5;
+
+Word3 :=
+    SHL(w6,8) OR w7;
+
+Word4 :=
+    SHL(w8,8) OR w9;
+
+Word5 :=
+    SHL(w10,8) OR w11;
+
+Word6 :=
+    SHL(w12,8) OR w13;
+
+Word7 :=
+    SHL(w14,8) OR w15;
+
+Word8 :=
+    SHL(w16,8) OR w17;
+
+Word9 :=
+    SHL(w18,8) OR w19;
+
+(*------------------*)
+
+FUNCTION_BLOCK FB_StringToWords2
+VAR_INPUT
+    TextValue  : STRING(20);
+END_VAR
+VAR_OUTPUT
+    WordArray  : ARRAY[0..9] OF WORD;
+END_VAR
+VAR
+    LocalBytes : ARRAY[0..19] OF BYTE;
+    i          : INT;
+    idx        : INT;
+END_VAR
+
+(*-------CONTINUE-------*)
+
+(* Clear destination array to eliminate residual data *)
+SysMemSet(ADR(WordArray), 0, SIZEOF(WordArray));
+SysMemSet(ADR(LocalBytes), 0, SIZEOF(LocalBytes));
+
+(* Atomic memory copy of string characters directly to byte array *)
+SysMemCpy(ADR(LocalBytes), ADR(TextValue), MIN(LEN(TextValue), 20));
+
+(* Pack bytes into 16-bit WORD registers with Big-Endian formatting *)
+idx := 0;
+FOR i := 0 TO 9 DO
+    WordArray[i] := SHL(BYTE_TO_WORD(LocalBytes[idx]), 8) OR BYTE_TO_WORD(LocalBytes[idx + 1]);
+    idx := idx + 2;
+END_FOR;
+
+
+(*-----------------MAIN---------------------*)
+(*------------GLOBAL VARIABLES--------------*)
+
+
+VAR_GLOBAL
+ Blink_HMI AT %MX0.0 :BOOL;
+ OutputBlink AT %QX0.0 :BOOL;
+ HMI_StartBlink AT %MX0.1 :BOOL;
+END_VAR
+
+
+'------------VARIABLES--------------*)
+
+
+PROGRAM PLC_PRG
+VAR
+
+    (*TIME*)
+    plcTime : DT;
+    timeDword : DWORD;
+
+	(*SYNC TIME*)
+    syncDword : DWORD;
+    syncTime  : DT;
+    setRtcOk  : BOOL;
+
+	(* SERIAL *)
+    hCom : UDINT := 0;
+    buffer : STRING(20);
+    written : UDINT;
+    initDone : BOOL := FALSE;
+
+	(* LED *)
+	Blink : BOOL := FALSE;
+
+    (* CONTROLE *)
+	valor : INT := 0;
+	strValor: STRING(20);
+	counter : INT := 0;
+
+	(* MODBUS TCP *)
+	mbServer :IL_ModBusTCPServer;
+	regData : ARRAY[0..29] OF WORD;
+	bitData : ARRAY[0..0] OF BYTE;
+
+	(* MONITORING *)
+	mbError : BOOL;
+	mbErrorID : ERROR_CODE;
+
+	temperatura : REAL := 25.7;
+
+	(*ENVIO: FLOAT*)
+	fbTemp : FB_RealToWords;
+	fbPress : FB_RealToWords;
+	fbSpeed : FB_RealToWords;
+
+	(*ENVIO: STRING*)
+	texto : STRING(20) := 'HELLOWORLD_2678';
+
+	fbString2 : FB_StringToWords2;
+	i: INT;
+
+	pByte0: POINTER TO BYTE;
+	pByte1: POINTER TO BYTE;
+	pByte2: POINTER TO BYTE;
+	pByte3: POINTER TO BYTE;
+	pByte4: POINTER TO BYTE;
+	pByte5: POINTER TO BYTE;
+
+	w0: WORD;
+	w1: WORD;
+	w2: WORD;
+	w3: WORD;
+	w4: WORD;
+	w5: WORD;
+
+	pressao : REAL := 4.3; (*bar*)
+	velocidade : REAL := 2.234; (*mm/s*)
+
+END_VAR
+
+(*------------MAIN--------------*)
+
+(*Abertura do serial*)
+IF NOT initDone THEN
+    hCom := SysComOpen(2);
+    initDone := TRUE;
+END_IF;
+
+(*Abertura da porta*)
+
+mbServer(
+	Enable := TRUE,
+	Port := 5502,
+
+	BitData := ADR(bitData),
+	SizeOfBitData := SIZEOF(bitData),
+
+
+	RegisterData := ADR(regData),
+	(*Determinar o tamanho da informação a ser enviada*)
+	SizeOfRegisterData := SIZEOF(regData)
+
+);
+
+	(*abertura do contador de tempo*)
+	
+	counter := counter + 1;
+
+
+IF counter >= 200 THEN
+
+valor := valor + 1;
+temperatura := temperatura + 1.1;
+pressao := pressao + 0.1;
+velocidade := velocidade + 0.001;
+
+strValor:= INT_TO_STRING(valor);
+
+    buffer := strValor;
+
+	(*ENVIO: INT*)
+
+	regData[0] := valor;
+
+	Blink := NOT Blink;
+
+
+	(*ENVIO: COUNTER*)
+	regData[1] := counter;
+
+	(*ENVIO: BOOLEAN*)
+	IF Blink THEN
+		regData[2] := 1;
+	ELSE
+		regData[2] := 0;
+	END_IF;
+
+	(*ENVIO: FLOAT OCUPA 2 WORDS CADA*)
+
+	fbTemp(RealValue := temperatura);
+	regData[3] := fbTemp.WordLow;
+	regData[4] := fbTemp.WordHigh;
+
+	fbPress(RealValue := pressao);
+	regData[5] := fbPress.WordLow;
+	regData[6] := fbPress.WordHigh;
+
+	fbSpeed(RealValue := velocidade);
+	regData[7] := fbSpeed.WordLow;
+	regData[8] := fbSpeed.WordHigh;
+
+	(*ENVIO: STRING *)
+
+    (* STRING PACKING PIPELINE *)
+    fbString2(TextValue := texto);
+
+    (* Direct array-to-array assignment via loop to prevent block execution lag *)
+    FOR i := 0 TO 9 DO
+        regData[9 + i] := fbString2.WordArray[i];
+    END_FOR;
+
+	(*ENVIO: DATE*)
+
+	(* 1. Get current RTC time from the PLC *)
+	plcTime := SysRtcGetTime(TRUE);
+
+	(* 2. Convert to a 32-bit integer (seconds since epoch) *)
+	timeDword := DT_TO_DWORD(plcTime);
+	
+	(* 3. Split into two Modbus WORDs (Little-Endian format) *)
+	regData[19] := DWORD_TO_WORD(timeDword AND 16#FFFF);       (* Low Word *)
+	regData[20] := DWORD_TO_WORD(SHR(timeDword, 16));
+	
+	plcTime := SysRtcGetTime(TRUE);
+
+	(*ENVIO: SERIAL*)
+
+    SysComWrite(
+        hCom,
+        ADR(buffer),
+        LEN(buffer),
+        ADR(written)
+    );
+
+
+    counter := 0;
+
+(*ELSE*)
+
+(*Blink := FALSE;*)
+
+END_IF;
+
+(* Check if Python has written a new timestamp to registers 21 and 22 *)
+IF regData[21] <> 0 OR regData[22] <> 0 THEN
+    
+    (* 1. Combine the Low Word [21] and High Word [22] into a 32-bit DWORD *)
+    syncDword := SHL(WORD_TO_DWORD(regData[22]), 16) OR WORD_TO_DWORD(regData[21]);
+    
+    (* 2. Convert to Date/Time format *)
+    syncTime := DWORD_TO_DT(syncDword);
+
+    (* 3. Overwrite the PLC internal hardware clock *)
+    setRtcOk := SysRtcSetTime(syncTime);
+    
+    (* 4. Clear the registers to acknowledge receipt and prevent continuous writing *)
+    regData[21] := 0;
+    regData[22] := 0;
+    
+END_IF;
+
+
+Blink_HMI := Blink;
+OutputBlink := Blink;
+
+
+(*ENVIO: DEBUG*)
+
+mbError := mbServer.Error;
+mbErrorID := mbServer.ErrorID;
