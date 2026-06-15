@@ -1,0 +1,15 @@
+import socket
+
+s = socket.socket()
+s.bind(("0.0.0.0", 5060))
+s.listen(1)
+
+print("Listening on 5060")
+
+conn, addr = s.accept()
+
+print("Connected from", addr)
+
+data = conn.recv(1024)
+print("Received:", data.decode())
+conn.close()
