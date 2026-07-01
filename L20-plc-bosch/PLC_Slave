@@ -1,0 +1,53 @@
+PROGRAM PLC_Slave
+VAR
+    MyServer : IL_ModBusTCPServer;
+    MyData : ARRAY[0..9] OF WORD;
+    
+    (* --- NEW: Dummy array to satisfy the strict library --- *)
+    DummyBits : ARRAY[0..0] OF WORD; 
+    
+    Is_Running : BOOL;
+    Has_Error : BOOL;
+    Machine_Status : INT := 1;
+    Cycle_Time : INT := 45;
+    
+    MyTimer : TON;
+    Test_Counter : INT := 0;
+END_VAR
+
+
+(*PROGRAM*)
+
+(* --- NEW: 2-Second Timer Logic --- *)
+(* The timer resets itself every time it hits 2 seconds (T#2s) *)
+MyTimer(IN := NOT MyTimer.Q, PT := T#2s);
+
+(* When the timer finishes, increase the counter *)
+IF MyTimer.Q THEN
+    Test_Counter := Test_Counter + 1;
+
+    (* Reset to 0 if it gets too high, just to keep it clean *)
+    IF Test_Counter > 9999 THEN
+        Test_Counter := 0;
+    END_IF;
+END_IF;
+
+(* Step A: Move your PLC data into the Modbus Array *)
+MyData[0] := INT_TO_WORD(Machine_Status);
+MyData[1] := INT_TO_WORD(Cycle_Time);
+
+(* Put the live counter into Register 2 *)
+MyData[2] := INT_TO_WORD(Test_Counter);
+
+
+(* Step B: Run the Modbus Server *)
+MyServer(
+	Enable := TRUE,
+	Port := 502,
+	BitData := ADR(DummyBits),
+	SizeOfBitData := 16,        (* <--- Tell it we have 16 bits (1 Word) *)
+	RegisterData := ADR(MyData),
+	SizeOfRegisterData := 10,   (* <--- Tell it we have exactly 10 Registers (Words) *)
+	InOperation => Is_Running,
+	Error => Has_Error
+);
