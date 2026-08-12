@@ -1,53 +1,81 @@
 PROGRAM PLC_Slave
+(* ========================================== *)
+(* 1. VARIABLE DECLARATION SECTION            *)
+(* ========================================== *)
 VAR
+    (* The Modbus Server Function Block *)
     MyServer : IL_ModBusTCPServer;
+    
+    (* The memory array the Gateway will read from (10 registers) *)
     MyData : ARRAY[0..9] OF WORD;
     
-    (* --- NEW: Dummy array to satisfy the strict library --- *)
-    DummyBits : ARRAY[0..0] OF WORD; 
+    (* Dummy array to satisfy the strict library *)
+    DummyBits : ARRAY[0..15] OF WORD;
     
+    (* Debugging variables to see if it is working *)
     Is_Running : BOOL;
     Has_Error : BOOL;
+
+    (* --- TEST VARIABLES OF DIFFERENT TYPES --- *)
     Machine_Status : INT := 1;
-    Cycle_Time : INT := 45;
+    Test_Counter : INT := 0;
+
+    Test_Bool : BOOL := TRUE;
+    Test_Float : REAL := 3.14159;
+    Test_String : STRING(4) := 'ABCD'; (* 4 chars max for 2 registers *)
+    
+    (* Pointers used to map 32-bit and String data into 16-bit Words *)
+    ptFloat : POINTER TO ARRAY[0..1] OF WORD;
+    ptString : POINTER TO ARRAY[0..1] OF WORD;
     
     MyTimer : TON;
-    Test_Counter : INT := 0;
 END_VAR
 
+(* ========================================== *)
+(* 2. EXECUTION CODE SECTION                  *)
+(* ========================================== *)
 
-(*PROGRAM*)
-
-(* --- NEW: 2-Second Timer Logic --- *)
-(* The timer resets itself every time it hits 2 seconds (T#2s) *)
+(* --- 1. Timer & Counter Logic --- *)
 MyTimer(IN := NOT MyTimer.Q, PT := T#2s);
 
-(* When the timer finishes, increase the counter *)
 IF MyTimer.Q THEN
     Test_Counter := Test_Counter + 1;
-
-    (* Reset to 0 if it gets too high, just to keep it clean *)
     IF Test_Counter > 9999 THEN
         Test_Counter := 0;
     END_IF;
+    
+    (* Toggle the boolean every 2 seconds for testing *)
+    Test_Bool := NOT Test_Bool;
 END_IF;
 
-(* Step A: Move your PLC data into the Modbus Array *)
-MyData[0] := INT_TO_WORD(Machine_Status);
-MyData[1] := INT_TO_WORD(Cycle_Time);
+(* --- 2. MODBUS MEMORY MAPPING --- *)
 
-(* Put the live counter into Register 2 *)
-MyData[2] := INT_TO_WORD(Test_Counter);
+(* Integers (16-bit -> 1 Register) *)
+MyData[0] := INT_TO_WORD(Machine_Status); 
+MyData[1] := INT_TO_WORD(Test_Counter);
+
+(* Boolean (1-bit -> Pack into Bit 0 of Register 2) *)
+MyData[2].0 := Test_Bool;
+
+(* REAL / Float (32-bit -> 2 Registers) *)
+ptFloat := ADR(Test_Float);
+MyData[3] := ptFloat^[0]; (* Lower word *)
+MyData[4] := ptFloat^[1]; (* Upper word *)
+
+(* STRING (4 ASCII chars -> 2 Registers) *)
+ptString := ADR(Test_String);
+MyData[5] := ptString^[0]; (* Contains 'AB' *)
+MyData[6] := ptString^[1]; (* Contains 'CD' *)
 
 
-(* Step B: Run the Modbus Server *)
+(* --- 3. RUN THE MODBUS SERVER --- *)
 MyServer(
-	Enable := TRUE,
-	Port := 502,
-	BitData := ADR(DummyBits),
-	SizeOfBitData := 16,        (* <--- Tell it we have 16 bits (1 Word) *)
-	RegisterData := ADR(MyData),
-	SizeOfRegisterData := 10,   (* <--- Tell it we have exactly 10 Registers (Words) *)
-	InOperation => Is_Running,
-	Error => Has_Error
+    Enable := TRUE,
+    Port := 502,
+    BitData := ADR(DummyBits),
+    SizeOfBitData := 32,        (* 16 Words * 2 Bytes = 32 Bytes of Dummy space *)
+    RegisterData := ADR(MyData),
+    SizeOfRegisterData := 20,   (* <--- THE FIX: 10 Words * 2 Bytes = 20 Bytes *)
+    InOperation => Is_Running,
+    Error => Has_Error
 );
