@@ -1,4 +1,4 @@
-PROGRAM PLC_Slave    
+PROGRAM PLC_Slave2
 (* ========================================== *)
 (* 1. VARIABLE DECLARATION SECTION            *)
 (* ========================================== *)
