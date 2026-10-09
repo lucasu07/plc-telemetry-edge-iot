@@ -71,3 +71,7 @@ LedPulse(IN := PulseTrig, PT := T#500ms);
 OutputBlink := LedPulse.Q;
 Blink_HMI := LedPulse.Q;
 
+(* ========================================== *)
+(* End of execution code section *)
+(* ========================================== *)
+END_PROGRAM
