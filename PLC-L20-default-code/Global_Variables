@@ -1,0 +1,10 @@
+VAR_GLOBAL
+ Blink_HMI AT %MX0.0 :BOOL;
+ OutputBlink AT %QX0.0 :BOOL;
+ HMI_StartBlink AT %MX0.1 :BOOL;
+
+	Test_Produto : STRING(13) := 'F000BL04AF';
+    Test_Nr_sequencial : DINT := 265598;
+
+
+END_VAR

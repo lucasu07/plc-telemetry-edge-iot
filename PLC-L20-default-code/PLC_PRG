@@ -1,0 +1,30 @@
+PROGRAM PLC_PRG
+(* ========================================== *)
+(* 1. VARIABLE DECLARATION SECTION            *)
+(* ========================================== *)
+
+VAR
+    (* Declare the timer *)
+    SimTimer : TON;
+END_VAR
+
+
+(* ========================================== *)
+(* 2. EXECUTION CODE SECTION *)
+(* ========================================== *)
+
+(* 1. Run the timer. It resets itself every time it hits 2 seconds *)
+SimTimer(IN := NOT SimTimer.Q, PT := T#2s);
+
+(* 2. Increment the global variable ONLY when the timer finishes *)
+IF SimTimer.Q THEN
+    Test_Nr_sequencial := Test_Nr_sequencial + 1;
+END_IF;
+
+(* 3. Call the Modbus server program *)
+PLC_Slave2();
+
+(* ========================================== *)
+(* End of execution code section *)
+(* ========================================== *)
+END_PROGRAM
