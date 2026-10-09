@@ -1,0 +1,73 @@
+PROGRAM PLC_Slave2
+(* ========================================== *)
+(* 1. VARIABLE DECLARATION SECTION            *)
+(* ========================================== *)
+VAR
+	MyServer : IL_ModBusTCPServer;
+
+    (* FIX: Increased array to 10 words to prevent boundary exception *)
+    MyData : ARRAY[0..9] OF WORD; 
+    DummyBits : ARRAY[0..15] OF WORD;
+
+    Is_Running : BOOL;
+    Has_Error : BOOL;
+
+    ptString : POINTER TO ARRAY[0..6] OF WORD; 
+    ptDint   : POINTER TO ARRAY[0..1] OF WORD; 
+
+    Last_Nr_sequencial : DINT;
+    PulseTrig : BOOL;
+    LedPulse : TP;
+
+END_VAR
+
+(* ========================================== *)
+(* 2. EXECUTION CODE SECTION *)
+(* ========================================== *)
+ 
+(* --- 1. MODBUS MEMORY MAPPING --- *)
+
+(* STRING (13 chars) -> Mapping 7 words into Registers 0 to 6 *)
+ptString := ADR(Test_Produto);
+MyData[0] := ptString^[0];
+MyData[1] := ptString^[1];
+MyData[2] := ptString^[2]; 
+MyData[3] := ptString^[3]; 
+MyData[4] := ptString^[4];
+MyData[5] := ptString^[5];
+MyData[6] := ptString^[6]; 
+
+(* DINT 'Nr_sequencial' -> Mapping 2 words into Registers 7 and 8 *)
+ptDint := ADR(Test_Nr_sequencial);
+MyData[7] := ptDint^[0]; (* Lower word *)
+MyData[8] := ptDint^[1]; (* Upper word *)
+
+(* --- 2. RUN THE MODBUS SERVER --- *)
+MyServer(
+    Enable := TRUE,
+    Port := 502,
+    BitData := ADR(DummyBits),
+    SizeOfBitData := 32,        
+    RegisterData := ADR(MyData),
+    SizeOfRegisterData := 20,   (* FIX: 10 Words * 2 Bytes = 20 Bytes *)
+    InOperation => Is_Running,
+    Error => Has_Error
+);
+
+(* --- 3. LED BLINK ON DATA CHANGE LOGIC --- *)
+
+(* Check if the sequence number has changed since the last PLC scan *)
+IF Test_Nr_sequencial <> Last_Nr_sequencial THEN
+    PulseTrig := TRUE; (* Fire the trigger *)
+    Last_Nr_sequencial := Test_Nr_sequencial; (* Update memory with the new value *)
+ELSE
+    PulseTrig := FALSE; (* Reset the trigger so it can be fired again later *)
+END_IF;
+
+(* The Pulse Timer (TP) keeps its output (Q) TRUE for 500ms when triggered *)
+LedPulse(IN := PulseTrig, PT := T#500ms);
+
+(* Write the timer's output to your physical and HMI global variables *)
+OutputBlink := LedPulse.Q;
+Blink_HMI := LedPulse.Q;
+
